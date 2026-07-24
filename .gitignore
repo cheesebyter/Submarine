@@ -1,0 +1,51 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# JavaScript / TypeScript
+node_modules/
+.npm/
+coverage/
+*.tsbuildinfo
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+Desktop.ini
+
+# Runtime data and models
+var/logs/*
+var/models/*
+!var/logs/.gitkeep
+!var/models/.gitkeep
+*.log
+*.wav
+*.mp3
+*.flac
+*.m4a
+*.srt
+*.vtt
+
+# Packaged artifacts
+artifacts/
+release/
+*.zip
+*.exe
+*.msi
+
