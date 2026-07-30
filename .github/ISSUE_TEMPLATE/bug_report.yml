@@ -1,0 +1,54 @@
+name: Bug report
+description: Report a reproducible Submarine defect without sensitive content.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include recordings, transcripts, `.env` content, tokens or
+        personal paths. Report vulnerabilities privately through SECURITY.md.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: dropdown
+    id: source
+    attributes:
+      label: Audio source
+      options:
+        - Chrome tab
+        - Microphone
+        - Output loopback
+        - Virtual audio device
+        - Not applicable
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Windows, Chrome, Python, Node, GPU and driver versions.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    id: checks
+    attributes:
+      label: Content-safe diagnostics
+      description: Include check results and redacted errors only.

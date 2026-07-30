@@ -32,8 +32,10 @@ Desktop.ini
 # Runtime data and models
 var/logs/*
 var/models/*
+var/run/*
 !var/logs/.gitkeep
 !var/models/.gitkeep
+!var/run/.gitkeep
 *.log
 *.wav
 *.mp3
@@ -41,6 +43,9 @@ var/models/*
 *.m4a
 *.srt
 *.vtt
+*.aac
+*.ogg
+*.opus
 
 # Packaged artifacts
 artifacts/
@@ -48,4 +53,5 @@ release/
 *.zip
 *.exe
 *.msi
-
+*.pdb
+*.dmp

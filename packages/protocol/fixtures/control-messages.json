@@ -1,0 +1,78 @@
+[
+  {
+    "name": "valid session start",
+    "valid": true,
+    "message": {
+      "type": "session.start",
+      "protocolVersion": 1,
+      "requestId": "request_1",
+      "audioFormat": {
+        "encoding": "pcm_s16le",
+        "sampleRateHz": 16000,
+        "channels": 1,
+        "frameDurationMs": 20
+      }
+    }
+  },
+  {
+    "name": "valid provisional transcript",
+    "valid": true,
+    "message": {
+      "type": "transcript.provisional",
+      "protocolVersion": 1,
+      "sessionId": "session_1",
+      "sequence": 7,
+      "text": "Good morn",
+      "sourceLanguage": "de"
+    }
+  },
+  {
+    "name": "valid final transcript",
+    "valid": true,
+    "message": {
+      "type": "transcript.final",
+      "protocolVersion": 1,
+      "sessionId": "session_1",
+      "sequence": 7,
+      "text": "Good morning.",
+      "sourceLanguage": "de"
+    }
+  },
+  {
+    "name": "reject future version",
+    "valid": false,
+    "errorCode": "unsupported_version",
+    "message": {
+      "type": "health.request",
+      "protocolVersion": 2,
+      "requestId": "request_2"
+    }
+  },
+  {
+    "name": "reject unknown property",
+    "valid": false,
+    "errorCode": "invalid_message",
+    "message": {
+      "type": "health.request",
+      "protocolVersion": 1,
+      "requestId": "request_3",
+      "transcript": "must-not-be-here"
+    }
+  },
+  {
+    "name": "reject unsupported audio format",
+    "valid": false,
+    "errorCode": "invalid_message",
+    "message": {
+      "type": "session.start",
+      "protocolVersion": 1,
+      "requestId": "request_4",
+      "audioFormat": {
+        "encoding": "float32",
+        "sampleRateHz": 48000,
+        "channels": 2,
+        "frameDurationMs": 100
+      }
+    }
+  }
+]

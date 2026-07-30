@@ -1,24 +1,33 @@
 # Submarine
 
-Submarine is a local-first live translation application. The MVP captures audio
-from an active Google Chrome tab, transcribes and translates speech to English
-on the local NVIDIA GPU, and displays continuously updated subtitles.
+Submarine is a local-first live translation application for Windows. It captures
+an explicitly selected Chrome tab, microphone, physical output or virtual audio
+device, translates speech to English on a local NVIDIA GPU, and displays
+continuously updated subtitles in a native overlay.
 
-No captured audio or transcript should leave the machine.
+Captured audio and transcripts stay in memory and on the local machine. There
+is no telemetry or cloud fallback.
 
-## MVP scope
+> [!IMPORTANT]
+> Submarine is pre-release software. Review the privacy model and known
+> limitations before using it with sensitive conversations.
 
-- Windows 11 and Google Chrome
+## Current capabilities
+
+- Windows 11 with an NVIDIA CUDA-capable GPU
 - Explicit capture of one Chrome tab
+- Explicit microphone capture
+- WASAPI output-loopback capture for speakers, headphones and virtual devices
 - Automatic source-language detection
 - English-only target language
 - Local inference with `faster-whisper`
 - Optional final-sentence cleanup through the local Ollama API
-- Provisional and final live subtitles
+- Provisional and final live subtitles in a resizable always-on-top overlay
+- Local-only, schema-validated WebSocket transport
+- Bounded queues, connection admission and handshake deadlines
 
-System-wide and per-application audio capture, additional browsers, translation
-targets, installers, and transcript export are post-MVP features unless a ticket
-explicitly adds them.
+Additional browsers, translation targets, signed installers, automatic updates
+and transcript export are not currently supported.
 
 ## Repository layout
 
@@ -46,11 +55,11 @@ var/
   models/                 Local model files; ignored by Git
 ```
 
-## Planned local data flow
+## Local data flow
 
 ```text
-Chrome tab
-  -> Chrome extension (PCM audio)
+Chrome tab / microphone / selected Windows output or virtual device
+  -> Chrome extension or native capture agent (PCM audio)
   -> localhost WebSocket
   -> VAD and segmenter
   -> faster-whisper / CUDA (English translation)
@@ -59,13 +68,93 @@ Chrome tab
 ```
 
 See [docs/architecture/overview.md](docs/architecture/overview.md) for component
-boundaries and [tickets/README.md](tickets/README.md) for the implementation
-backlog.
+boundaries, [docs/architecture/protocol-v1.md](docs/architecture/protocol-v1.md)
+for the streaming contract and [tickets/README.md](tickets/README.md) for the
+implementation backlog.
 
-## Getting started
+## Development setup
 
-The repository currently contains the project foundation and ticket backlog.
-Runtime setup commands will be added by the bootstrap tickets. Until then:
+### Prerequisites
+
+- Windows 11 with PowerShell 7 or Windows PowerShell 5.1
+- Python 3.12 available through `py -3.12`
+- Node.js 22 and npm 10
+- Google Chrome with extension developer mode available
+- NVIDIA RTX GPU with a current driver
+- Ollama on loopback when optional sentence cleanup is enabled
+
+CUDA libraries and model files are not required by the backend skeleton. Their
+project-local runtime packages are installed by the setup script. Models must
+never be downloaded silently during a translation session.
+
+### Bootstrap
+
+```powershell
+.\scripts\setup.ps1
+.\scripts\download-whisper-model.ps1
+.\scripts\check.ps1
+```
+
+The setup script creates `.venv`, installs the pinned Python development
+dependencies and installs the pinned npm workspace dependencies. No Python or npm
+package is expected to be installed globally. The model download is an explicit,
+multi-gigabyte one-time step.
+
+### Run the backend
+
+```powershell
+.\scripts\dev-backend.ps1
+```
+
+The service listens only on `127.0.0.1:8765`. Its content-safe health endpoint is
+available at `http://127.0.0.1:8765/health`; `model_status` must be `ready` before
+starting capture. The normal command runs without file watching so Whisper stays
+loaded. During active backend development, opt into automatic restarts with
+`.\scripts\dev-backend.ps1 -Reload`.
+
+### Load the Chrome extension
+
+```powershell
+npm run build
+```
+
+Open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**
+and select `apps/chrome-extension/dist`. Start the backend before pressing
+**Start translation** in the extension popup.
+
+### Run the subtitle overlay
+
+In a second PowerShell window:
+
+```powershell
+.\scripts\dev-overlay.ps1
+```
+
+The native resizable overlay connects only to `127.0.0.1`, stays on top by
+default and shows provisional text in gray italics until finalized English text
+replaces it. `A-` and `A+` change the font size. The source-language selector
+can lock Whisper to Spanish, German, French, Italian or Portuguese when
+automatic detection is unreliable. The audio meter and a warning after three
+seconds of silence distinguish missing tab audio from missing speech.
+**Stop capture** terminates the active Chrome capture session. Closing the
+window disconnects the overlay cleanly; subtitles remain only in bounded memory
+and are never saved.
+
+The **Windows audio source** selector also lists WASAPI microphones and complete
+output-device mixes. Choose a microphone or an `Output — ...` entry and press
+**Start source**. Output entries capture everything Windows sends to that
+headphone, speaker or virtual output. Virtual devices such as VB-CABLE,
+VoiceMeeter, SteelSeries Sonar and NVIDIA Broadcast use the same selection path.
+Only one Chrome or Windows source may be active at a time.
+
+Final-sentence cleanup through local Ollama is disabled by default. Copy the
+corresponding values from `config/.env.example` into the ignored root `.env` to
+enable it. Provisional subtitles never use Ollama, and errors or timeouts fall
+back to the raw Whisper result. `translategemma:4b` is the recommended cleanup
+model; Submarine limits its context to 2048 tokens to avoid unnecessary VRAM
+use beside Whisper.
+
+### Ticket workflow
 
 1. Read `AGENTS.md`.
 2. Select the first unblocked ticket from `tickets/backlog/`.
@@ -82,3 +171,25 @@ Runtime setup commands will be added by the bootstrap tickets. Until then:
 - Reproducible setup and releases
 - No silent fallback to cloud services
 
+## Security and privacy
+
+- Runtime services are restricted to loopback IP addresses.
+- Browser origins are rejected at native-only WebSocket endpoints.
+- Protocol messages, audio frames, queues and concurrent subtitle connections
+  are bounded.
+- Raw audio and full transcripts are not logged or persisted by default.
+- Model downloads are explicit setup operations, never runtime fallbacks.
+
+Please report suspected vulnerabilities privately through the process in
+[SECURITY.md](SECURITY.md). Do not include audio,
+transcripts, tokens, `.env` content or personal paths in public issues.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the ticket workflow, development
+checks and pull-request requirements. Community participation is governed by
+[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
+## License
+
+Submarine is available under the [MIT License](LICENSE).

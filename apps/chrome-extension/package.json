@@ -1,0 +1,22 @@
+{
+  "name": "@submarine/chrome-extension",
+  "version": "0.1.4",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "tsc --project tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@submarine/protocol": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.2.2",
+    "@types/node": "22.20.1",
+    "esbuild": "0.28.1",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
+  }
+}

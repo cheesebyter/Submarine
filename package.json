@@ -1,0 +1,29 @@
+{
+  "name": "submarine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first live translation",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cheesebyter/Submarine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cheesebyter/Submarine/issues"
+  },
+  "homepage": "https://github.com/cheesebyter/Submarine#readme",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.14.0 <23"
+  },
+  "packageManager": "npm@10.9.2",
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "check": "npm run check --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "audit": "npm audit --audit-level=high"
+  }
+}

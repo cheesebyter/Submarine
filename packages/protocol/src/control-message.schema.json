@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://submarine.local/protocol/v1/control-message.schema.json",
+  "title": "Submarine protocol v1 control message",
+  "oneOf": [
+    { "$ref": "#/$defs/hello" },
+    { "$ref": "#/$defs/sessionStart" },
+    { "$ref": "#/$defs/sessionStarted" },
+    { "$ref": "#/$defs/sessionConfigure" },
+    { "$ref": "#/$defs/sessionStop" },
+    { "$ref": "#/$defs/sessionStopped" },
+    { "$ref": "#/$defs/transcript" },
+    { "$ref": "#/$defs/audioLevel" },
+    { "$ref": "#/$defs/healthRequest" },
+    { "$ref": "#/$defs/healthResponse" },
+    { "$ref": "#/$defs/error" }
+  ],
+  "$defs": {
+    "version": {
+      "const": 1
+    },
+    "requestId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "sessionId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "audioFormat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["encoding", "sampleRateHz", "channels", "frameDurationMs"],
+      "properties": {
+        "encoding": { "const": "pcm_s16le" },
+        "sampleRateHz": { "const": 16000 },
+        "channels": { "const": 1 },
+        "frameDurationMs": { "const": 20 }
+      }
+    },
+    "hello": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "protocolVersion", "clientType", "requestId"],
+      "properties": {
+        "type": { "const": "hello" },
+        "protocolVersion": { "$ref": "#/$defs/version" },
+        "clientType": { "enum": ["capture", "subtitle"] },
+        "requestId": { "$ref": "#/$defs/requestId" }
+      }
+    },
+    "sessionStart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "protocolVersion", "requestId", "audioFormat"],
+      "properties": {
+        "type": { "const": "session.start" },
+        "protocolVersion": { "$ref": "#/$defs/version" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "audioFormat": { "$ref": "#/$defs/audioFormat" }
+      }
+    },
+    "sessionStarted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "protocolVersion", "requestId", "sessionId"],
+      "properties": {
+        "type": { "const": "session.started" },
+        "protocolVersion": { "$ref": "#/$defs/version" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "sessionId": { "$ref": "#/$defs/sessionId" }
+      }
+    },
+    "sessionConfigure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "protocolVersion", "sessionId", "sourceLanguage"],
+      "properties": {
+        "type": { "const": "session.configure" },
+        "protocolVersion": { "$ref": "#/$defs/version" },
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "sourceLanguage": {
+          "type": ["string", "null"],
+          "enum": [null, "es", "de", "fr", "it", "pt", "ja", "ko", "zh", "ru"]
+        }
+      }
+    },
+    "sessionStop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "protocolVersion", "sessionId", "reason"],
+      "properties": {
+        "type": { "const": "session.stop" },
+        "protocolVersion": { "$ref": "#/$defs/version" },
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "reason": {
+          "enum": ["user", "source-ended", "client-shutdown", "error"]
+        }
+      }
+    },
+    "sessionStopped": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "protocolVersion", "sessionId", "reason"],
+      "properties": {
+        "type": { "const": "session.stopped" },
+        "protocolVersion": { "$ref": "#/$defs/version" },
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "reason": {
+          "enum": ["user", "source-ended", "client-shutdown", "error", "server-shutdown"]
+        }
+      }
+    },
+    "transcript": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "protocolVersion",
+        "sessionId",
+        "sequence",
+        "text",
+        "sourceLanguage"
+      ],
+      "properties": {
+        "type": {
+          "enum": ["transcript.provisional", "transcript.final"]
+        },
+        "protocolVersion": { "$ref": "#/$defs/version" },
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "sequence": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "text": { "type": "string", "maxLength": 8192 },
+        "sourceLanguage": {
+          "type": ["string", "null"],
+          "minLength": 2,
+          "maxLength": 16
+        }
+      }
+    },
+    "audioLevel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "protocolVersion", "sessionId", "rms", "signal"],
+      "properties": {
+        "type": { "const": "audio.level" },
+        "protocolVersion": { "$ref": "#/$defs/version" },
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "rms": { "type": "number", "minimum": 0, "maximum": 1 },
+        "signal": { "type": "boolean" }
+      }
+    },
+    "healthRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "protocolVersion", "requestId"],
+      "properties": {
+        "type": { "const": "health.request" },
+        "protocolVersion": { "$ref": "#/$defs/version" },
+        "requestId": { "$ref": "#/$defs/requestId" }
+      }
+    },
+    "healthResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "protocolVersion", "requestId", "status"],
+      "properties": {
+        "type": { "const": "health.response" },
+        "protocolVersion": { "$ref": "#/$defs/version" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "status": { "enum": ["ready", "loading", "degraded"] }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "protocolVersion", "code", "message", "recoverable"],
+      "properties": {
+        "type": { "const": "error" },
+        "protocolVersion": { "$ref": "#/$defs/version" },
+        "code": {
+          "enum": [
+            "unsupported_version",
+            "invalid_message",
+            "invalid_state",
+            "message_too_large",
+            "session_not_found",
+            "server_unavailable"
+          ]
+        },
+        "message": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "recoverable": { "type": "boolean" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "sessionId": { "$ref": "#/$defs/sessionId" }
+      }
+    }
+  }
+}

@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Windows checks
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: |
+            services/translation-backend/pyproject.toml
+            apps/desktop-overlay/pyproject.toml
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          python -m venv .venv
+          .\.venv\Scripts\python.exe -m pip install "pip==26.1.2"
+          .\.venv\Scripts\python.exe -m pip install --editable "./services/translation-backend[dev]"
+          .\.venv\Scripts\python.exe -m pip install --editable "./apps/desktop-overlay"
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Run repository checks
+        shell: pwsh
+        run: .\scripts\check.ps1
+
+      - name: Audit dependencies
+        shell: pwsh
+        run: |
+          .\.venv\Scripts\python.exe -m pip_audit --local
+          npm audit --audit-level=high
+
+      - name: Run publication checks
+        shell: pwsh
+        run: .\scripts\publication-check.ps1

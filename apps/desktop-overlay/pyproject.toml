@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling==1.28.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "submarine-desktop-overlay"
+version = "0.1.0"
+description = "Native local subtitle overlay for Submarine"
+license = "MIT"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "numpy==2.3.5",
+  "PyAudioWPatch==0.2.12.8",
+  "websockets==16.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/cheesebyter/Submarine"
+Issues = "https://github.com/cheesebyter/Submarine/issues"
+Repository = "https://github.com/cheesebyter/Submarine.git"
+
+[project.scripts]
+submarine-overlay = "submarine_overlay.app:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/submarine_overlay"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["submarine_overlay"]

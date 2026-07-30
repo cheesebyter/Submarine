@@ -1,0 +1,27 @@
+[
+  { "state": "idle", "messageType": "session.start", "valid": true, "next": "starting" },
+  {
+    "state": "starting",
+    "messageType": "session.started",
+    "valid": true,
+    "next": "streaming"
+  },
+  {
+    "state": "streaming",
+    "messageType": "session.stop",
+    "valid": true,
+    "next": "stopping"
+  },
+  {
+    "state": "stopping",
+    "messageType": "session.stopped",
+    "valid": true,
+    "next": "stopped"
+  },
+  { "state": "stopped", "messageType": "session.start", "valid": true, "next": "starting" },
+  { "state": "idle", "messageType": "session.stop", "valid": false },
+  { "state": "starting", "messageType": "session.start", "valid": false },
+  { "state": "streaming", "messageType": "session.started", "valid": false },
+  { "state": "stopping", "messageType": "session.stop", "valid": false },
+  { "state": "stopped", "messageType": "session.stopped", "valid": false }
+]
