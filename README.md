@@ -9,7 +9,7 @@ Captured audio and transcripts stay in memory and on the local machine. There
 is no telemetry or cloud fallback.
 
 > [!IMPORTANT]
-> Submarine is pre-release software. Review the privacy model and known
+> Submarine is a Experiment. Review the privacy model and known
 > limitations before using it with sensitive conversations.
 
 ## Current capabilities
@@ -187,8 +187,7 @@ transcripts, tokens, `.env` content or personal paths in public issues.
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the ticket workflow, development
-checks and pull-request requirements. Community participation is governed by
-[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+checks and pull-request requirements.
 
 ## License
 
