@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling==1.28.0"]
+requires = ["hatchling==1.31.0"]
 build-backend = "hatchling.build"
 
 [project]
@@ -9,9 +9,9 @@ description = "Native local subtitle overlay for Submarine"
 license = "MIT"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-  "numpy==2.3.5",
+  "numpy==2.5.1",
   "PyAudioWPatch==0.2.12.8",
-  "websockets==16.0",
+  "websockets==16.1.1",
 ]
 
 [project.urls]
