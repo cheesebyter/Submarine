@@ -46,6 +46,8 @@ var/run/*
 *.aac
 *.ogg
 *.opus
+*.mp4
+*.mkv
 
 # Packaged artifacts
 artifacts/
@@ -55,3 +57,6 @@ release/
 *.msi
 *.pdb
 *.dmp
+
+# Opt-in transcript recordings
+var/transcripts/

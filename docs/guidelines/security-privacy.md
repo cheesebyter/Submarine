@@ -18,5 +18,8 @@
 - Dependencies and packaged binaries must be pinned and reviewed before release.
 - Temporary audio buffers stay in memory where practical and are cleared after use.
 
+The only transcript persistence is the opt-in overlay recording (SUB-012): off by
+default, visibly indicated, local files only, manual deletion.
+
 Any feature that persists, exports or shares transcripts needs an explicit ticket
 covering consent, retention and deletion behavior.

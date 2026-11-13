@@ -14,6 +14,7 @@ from submarine_backend.translation import (
     FasterWhisperTranslationEngine,
     ModelStatus,
     TranslationEngine,
+    WhisperOptions,
 )
 
 
@@ -32,6 +33,17 @@ def create_app(engine: TranslationEngine | None = None) -> FastAPI:
         settings.model_path.resolve(),
         device=settings.model_device,
         compute_type=settings.model_compute_type,
+        options=WhisperOptions(
+            default_language=settings.source_language,
+            initial_prompt=settings.initial_prompt,
+            translation_prompt=settings.translation_prompt,
+            no_speech_threshold=settings.no_speech_threshold,
+            log_prob_threshold=settings.log_prob_threshold,
+            vad_threshold=settings.vad_threshold,
+            vad_min_silence_ms=settings.vad_min_silence_ms,
+            vad_min_speech_ms=settings.vad_min_speech_ms,
+            vad_speech_pad_ms=settings.vad_speech_pad_ms,
+        ),
     )
 
     @asynccontextmanager
@@ -51,11 +63,14 @@ def create_app(engine: TranslationEngine | None = None) -> FastAPI:
     )
     app.state.translation_engine = translation_engine
     app.state.subtitle_hub = SubtitleHub()
+    app.state.speech_rms_threshold = settings.speech_rms_threshold
+    app.state.translate_finals_with_cleaner = settings.translation_mode == "ollama"
     app.state.ollama_cleaner_factory = lambda: OllamaCleaner(
         enabled=settings.ollama_cleanup_enabled,
         url=settings.ollama_url,
         model=settings.ollama_model,
         timeout_seconds=settings.ollama_timeout_seconds,
+        glossary=settings.glossary_terms,
     )
 
     @app.get("/health", response_model=HealthResponse)

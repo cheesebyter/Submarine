@@ -38,6 +38,7 @@ export type ControlMessage =
       protocolVersion: 1;
       sessionId: string;
       sourceLanguage: string | null;
+      includeOriginal?: boolean;
     }
   | {
       type: "session.stop";
@@ -58,6 +59,7 @@ export type ControlMessage =
       sequence: number;
       text: string;
       sourceLanguage: string | null;
+      originalText?: string;
     }
   | {
       type: "audio.level";

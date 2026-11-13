@@ -132,9 +132,12 @@ In a second PowerShell window:
 
 The native resizable overlay connects only to `127.0.0.1`, stays on top by
 default and shows provisional text in gray italics until finalized English text
-replaces it. `A-` and `A+` change the font size. The source-language selector
-can lock Whisper to Spanish, German, French, Italian or Portuguese when
-automatic detection is unreliable. The audio meter and a warning after three
+replaces it. `A-` and `A+` change the font size. The **Source** selector locks
+Whisper to one spoken language (Spanish, German, French, Italian, Portuguese,
+Dutch, Polish, Czech, Swedish, Turkish, Russian, Ukrainian, Arabic, Japanese,
+Korean, Chinese) when automatic detection is unreliable. The choice is
+remembered in the ignored `var/run/overlay-settings.json`. Select the language
+before starting capture; the backend keeps it across sessions. The audio meter and a warning after three
 seconds of silence distinguish missing tab audio from missing speech.
 **Stop capture** terminates the active Chrome capture session. Closing the
 window disconnects the overlay cleanly; subtitles remain only in bounded memory
@@ -146,6 +149,28 @@ output-device mixes. Choose a microphone or an `Output — ...` entry and press
 headphone, speaker or virtual output. Virtual devices such as VB-CABLE,
 VoiceMeeter, SteelSeries Sonar and NVIDIA Broadcast use the same selection path.
 Only one Chrome or Windows source may be active at a time.
+
+**Mitschnitt speichern** (off by default) writes every finalized segment of the
+running capture to two plain-text files in `var/transcripts/` (change the folder
+with **Ordner…**): `<timestamp>_original.txt` in the spoken language and
+`<timestamp>_english.txt` with the translation. Line *n* of both files belongs
+together. While active, the overlay shows a red `● REC` indicator and the
+backend runs an additional transcription pass for final segments, which costs
+some extra GPU time. Provisional text is never recorded, the backend never
+stores transcripts, and files are kept until you delete them yourself.
+
+Decoding can be tuned in the ignored root `.env` (see `config/.env.example`):
+`SUBMARINE_SOURCE_LANGUAGE` forces the spoken language (the overlay entry
+**Auto** then falls back to it), `SUBMARINE_INITIAL_PROMPT` (spoken language) and
+`SUBMARINE_TRANSLATION_PROMPT` (English) bias names and terms, and the
+confidence, VAD and energy-gate thresholds discard uncertain or quiet background
+audio. Intelligible television speech at conversation volume cannot be filtered
+reliably; capture the microphone instead of a complete output mix where possible.
+
+With `SUBMARINE_TRANSLATION_MODE=ollama` (and Ollama cleanup enabled) final
+segments are transcribed in the source language and translated by the local
+Ollama model, which is more faithful on noisy audio; provisional text and the
+fallback on Ollama errors still use Whisper's direct translation.
 
 Final-sentence cleanup through local Ollama is disabled by default. Copy the
 corresponding values from `config/.env.example` into the ignored root `.env` to
@@ -177,7 +202,9 @@ use beside Whisper.
 - Browser origins are rejected at native-only WebSocket endpoints.
 - Protocol messages, audio frames, queues and concurrent subtitle connections
   are bounded.
-- Raw audio and full transcripts are not logged or persisted by default.
+- Raw audio and full transcripts are not logged or persisted by default. The only
+  exception is the explicit, visible **Mitschnitt speichern** option of the
+  overlay (local files, see SUB-012).
 - Model downloads are explicit setup operations, never runtime fallbacks.
 
 Please report suspected vulnerabilities privately through the process in

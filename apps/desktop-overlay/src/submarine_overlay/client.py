@@ -42,7 +42,12 @@ class OverlayClient:
             self._loop,
         )
 
-    def configure_language(self, session_id: str, language: str | None) -> None:
+    def configure_session(
+        self,
+        session_id: str,
+        language: str | None,
+        include_original: bool,
+    ) -> None:
         if self._loop is None or self._socket is None:
             return
         message = {
@@ -50,6 +55,7 @@ class OverlayClient:
             "protocolVersion": 1,
             "sessionId": session_id,
             "sourceLanguage": language,
+            "includeOriginal": include_original,
         }
         asyncio.run_coroutine_threadsafe(
             self._socket.send(json.dumps(message, separators=(",", ":"))),

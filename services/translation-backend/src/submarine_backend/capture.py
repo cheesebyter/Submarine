@@ -118,6 +118,8 @@ async def _handle_control(
                 "text": result.text,
                 "sourceLanguage": result.source_language,
             }
+            if kind == "final" and result.original_text:
+                response["originalText"] = result.original_text
             await _send_json(websocket, session, response)
             await websocket.app.state.subtitle_hub.publish(response)
 
@@ -134,6 +136,8 @@ async def _handle_control(
             on_result,
             on_translation_error,
             cleaner=websocket.app.state.ollama_cleaner_factory(),
+            speech_rms_threshold=websocket.app.state.speech_rms_threshold,
+            translate_finals_with_cleaner=websocket.app.state.translate_finals_with_cleaner,
         )
         response = {
             "type": "session.started",
@@ -166,7 +170,7 @@ async def _handle_control(
         await websocket.app.state.subtitle_hub.register_capture(
             str(session.session_id),
             stop_capture,
-            session.translation.set_source_language,
+            session.translation.configure,
             response,
         )
         return False

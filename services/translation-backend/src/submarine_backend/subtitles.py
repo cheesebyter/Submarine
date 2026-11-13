@@ -13,7 +13,7 @@ from submarine_backend.protocol import (
 )
 
 StopCallback = Callable[[str], Awaitable[None]]
-ConfigureCallback = Callable[[str | None], None]
+ConfigureCallback = Callable[[str | None, bool | None], None]
 _HELLO_TIMEOUT_SECONDS = 5.0
 
 
@@ -113,13 +113,18 @@ class SubtitleHub:
             )
         await self._stop_callback("user")
 
-    def configure_capture(self, session_id: str, language: str | None) -> None:
+    def configure_capture(
+        self,
+        session_id: str,
+        language: str | None,
+        include_original: bool | None = None,
+    ) -> None:
         if self._active_session_id != session_id or self._configure_callback is None:
             raise ProtocolValidationError(
                 "The capture session is no longer active",
                 ProtocolErrorCode.SESSION_NOT_FOUND,
             )
-        self._configure_callback(language)
+        self._configure_callback(language, include_original)
 
 
 async def subtitle_websocket(websocket: WebSocket) -> None:
@@ -181,6 +186,7 @@ async def subtitle_websocket(websocket: WebSocket) -> None:
                 hub.configure_capture(
                     str(message["sessionId"]),
                     str(language) if language is not None else None,
+                    message.get("includeOriginal"),
                 )
             else:
                 raise ProtocolValidationError(

@@ -39,6 +39,12 @@ stopped -> session.start -> starting (new session)
 Health and error messages do not change session state. Other transitions are
 invalid. A source may send binary audio only while streaming.
 
+`session.configure` sets the Whisper source language (`null` = automatic) and
+may carry the optional boolean `includeOriginal`. While it is `true`, the backend
+adds the optional `originalText` field (untranslated transcript in the spoken
+language) to `transcript.final` events. `transcript.provisional` never carries
+`originalText`. Both additions are optional and backward compatible.
+
 `transcript.provisional` may be replaced by another provisional event with the
 same sequence. `transcript.final` commits that sequence permanently. Clients
 must ignore a later provisional event for a finalized sequence.

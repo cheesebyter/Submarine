@@ -13,3 +13,12 @@ def test_loopback_host_is_accepted(host: str) -> None:
 def test_non_ip_or_non_loopback_host_is_rejected(host: str) -> None:
     with pytest.raises(ValidationError):
         Settings(host=host)
+
+
+def test_source_language_and_glossary_are_normalized() -> None:
+    assert Settings().source_language is None
+    assert Settings(source_language=" ES ").source_language == "es"
+    assert Settings(source_language="").source_language is None
+    assert Settings(glossary="Tobi, Angelita ,").glossary_terms == ("Tobi", "Angelita")
+    with pytest.raises(ValidationError):
+        Settings(source_language="spanish")

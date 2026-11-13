@@ -39,6 +39,30 @@
     }
   },
   {
+    "name": "valid final transcript with original text",
+    "valid": true,
+    "message": {
+      "type": "transcript.final",
+      "protocolVersion": 1,
+      "sessionId": "session_1",
+      "sequence": 8,
+      "text": "Good morning.",
+      "sourceLanguage": "de",
+      "originalText": "Guten Morgen."
+    }
+  },
+  {
+    "name": "valid configure with language and original text",
+    "valid": true,
+    "message": {
+      "type": "session.configure",
+      "protocolVersion": 1,
+      "sessionId": "session_1",
+      "sourceLanguage": "nl",
+      "includeOriginal": true
+    }
+  },
+  {
     "name": "reject future version",
     "valid": false,
     "errorCode": "unsupported_version",

@@ -1,10 +1,13 @@
 import queue
 import tkinter as tk
-from tkinter import ttk
+from pathlib import Path
+from tkinter import filedialog, ttk
 from typing import Any
 
 from submarine_overlay.audio_capture import AudioDevice, NativeCaptureAgent, list_wasapi_devices
 from submarine_overlay.client import OverlayClient
+from submarine_overlay.recorder import TranscriptRecorder
+from submarine_overlay.settings import LANGUAGES, load_settings, save_settings
 from submarine_overlay.state import OverlayState
 
 
@@ -19,8 +22,8 @@ class OverlayApp:
         self.font_size = 26
 
         root.title("Submarine — Live English")
-        root.geometry("960x300+160+700")
-        root.minsize(520, 220)
+        root.geometry("960x340+160+660")
+        root.minsize(520, 260)
         root.configure(bg="#071522")
         root.attributes("-topmost", True)
         root.protocol("WM_DELETE_WINDOW", self.close)
@@ -30,7 +33,11 @@ class OverlayApp:
         self.provisional_text = tk.StringVar(value="")
         self.error_text = tk.StringVar(value="")
         self.always_on_top = tk.BooleanVar(value=True)
-        self.source_choice = tk.StringVar(value="Auto")
+        language, transcript_dir = load_settings()
+        self.source_choice = tk.StringVar(value=language)
+        self.recording = tk.BooleanVar(value=False)
+        self.recording_info = tk.StringVar(value="")
+        self.recorder = TranscriptRecorder(transcript_dir)
         self.audio_level = tk.DoubleVar(value=0)
         self.audio_source = tk.StringVar(value="")
         self._configured_session: str | None = None
@@ -125,7 +132,7 @@ class OverlayApp:
         language = ttk.Combobox(
             controls,
             textvariable=self.source_choice,
-            values=("Auto", "Spanish", "German", "French", "Italian", "Portuguese"),
+            values=tuple(LANGUAGES),
             state="readonly",
             width=11,
         )
@@ -139,6 +146,26 @@ class OverlayApp:
         ).pack(side="left")
         ttk.Button(controls, text="Stop capture", command=self._stop_capture).pack(side="right")
 
+        recording = ttk.Frame(self.root, padding=(16, 0, 16, 8))
+        recording.pack(fill="x")
+        ttk.Checkbutton(
+            recording,
+            text="Mitschnitt speichern (Original + Englisch)",
+            variable=self.recording,
+            command=self._toggle_recording,
+        ).pack(side="left")
+        ttk.Button(recording, text="Ordner…", command=self._choose_transcript_dir).pack(
+            side="left", padx=8
+        )
+        tk.Label(
+            recording,
+            textvariable=self.recording_info,
+            bg="#071522",
+            fg="#ff806e",
+            anchor="w",
+            font=("Segoe UI", 9),
+        ).pack(side="left", fill="x", expand=True)
+
     def _poll(self) -> None:
         while True:
             try:
@@ -151,6 +178,7 @@ class OverlayApp:
             elif message.get("type") == "capture.local.error":
                 self.state.error = str(message["message"])
             else:
+                self._record(message)
                 self.state.apply(message)
             self.events.task_done()
         self._render()
@@ -200,21 +228,59 @@ class OverlayApp:
         self._render()
 
     def _configure_language(self) -> None:
+        self._save_settings()
         if self.state.session_id is None:
             return
-        codes = {
-            "Auto": None,
-            "Spanish": "es",
-            "German": "de",
-            "French": "fr",
-            "Italian": "it",
-            "Portuguese": "pt",
-        }
-        self.client.configure_language(
+        self.client.configure_session(
             self.state.session_id,
-            codes[self.source_choice.get()],
+            LANGUAGES[self.source_choice.get()],
+            self.recorder.active,
         )
         self._configured_session = self.state.session_id
+
+    def _save_settings(self) -> None:
+        save_settings(self.source_choice.get(), self.recorder.directory)
+
+    def _toggle_recording(self) -> None:
+        if self.recording.get():
+            self.recorder.start()
+            self.recording_info.set(f"● REC → {self.recorder.directory}")
+        else:
+            self.recorder.stop()
+            self.recording_info.set("")
+        self._configure_language()
+
+    def _choose_transcript_dir(self) -> None:
+        chosen = filedialog.askdirectory(
+            initialdir=str(self.recorder.directory.parent)
+            if self.recorder.directory.parent.exists()
+            else None,
+            title="Ordner für Mitschnitte",
+        )
+        if not chosen:
+            return
+        was_active = self.recorder.active
+        self.recorder.stop()
+        self.recorder = TranscriptRecorder(Path(chosen))
+        if was_active:
+            self.recorder.start()
+            self.recording_info.set(f"● REC → {self.recorder.directory}")
+        self._save_settings()
+
+    def _record(self, message: dict[str, Any]) -> None:
+        if message.get("type") != "transcript.final" or not self.recorder.active:
+            return
+        try:
+            original = message.get("originalText")
+            self.recorder.record(
+                str(message.get("text", "")),
+                original if isinstance(original, str) else None,
+            )
+        except OSError as error:
+            self.recorder.stop()
+            self.recording.set(False)
+            self.recording_info.set("")
+            self.state.error = f"Mitschnitt gestoppt: {type(error).__name__}"
 
     def _load_audio_devices(self) -> None:
         try:
@@ -243,6 +309,7 @@ class OverlayApp:
             self.state.error = str(error)
 
     def close(self) -> None:
+        self.recorder.stop()
         self.capture_agent.stop()
         self.client.close()
         self.root.destroy()
